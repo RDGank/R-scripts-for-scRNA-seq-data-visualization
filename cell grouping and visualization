@@ -23,3 +23,21 @@ sce<-merge(sce,sce3)
 sce<-merge(sce,sce4)
 
 #remove batch effect
+use_harmony<-function(input_sce){
+input_sce <- NormalizeData(input_sce, 
+                             normalization.method = "LogNormalize",
+                             scale.factor = 1e4) 
+  input_sce <- FindVariableFeatures(input_sce)
+  input_sce <- ScaleData(input_sce)
+  input_sce <- RunPCA(input_sce, features = VariableFeatures(object = input_sce))
+  input_sce <- RunHarmony(input_sce, "orig.ident")
+  names(input_sce@reductions)
+  input_sce <- RunUMAP(input_sce,  dims = 1:15,  reduction = "harmony")
+  input_sce <- RunTSNE(input_sce,  dims = 1:15,  reduction = "harmony",check_duplicates=F)
+  input_sce <- FindNeighbors(input_sce, reduction = "harmony",dims = 1:15) 
+  for (res in c(0.01, 0.05, 0.1, 0.2, 0.3, 0.5,0.8,1)) {
+  input_sce=FindClusters(input_sce, resolution = res, algorithm = 1)
+  }
+return(input_sce)
+}
+
