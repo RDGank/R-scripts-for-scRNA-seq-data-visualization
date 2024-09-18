@@ -3,3 +3,23 @@ library(Seurat)
 library(patchwork)
 library(ggplot2)
 library(ggsci)
+library(harmony)
+
+#load scRNA-seq data from cellranger results
+sce.data <- Read10X(data.dir = "01_data/")
+sce <- CreateSeuratObject(counts = sce.data, 
+                           project = "1", 
+                           min.cells = 3, 
+                           min.features = 200)
+#quality control
+sce[["percent.mt"]] <- PercentageFeatureSet(sce, pattern = "^MT-")
+sce <- subset(sce, subset = nFeature_RNA > 200 & 
+                        nFeature_RNA < 2500 & 
+                        percent.mt < 10)
+
+#merge different datasets
+sce<-merge(sce1,sce2)
+sce<-merge(sce,sce3)
+sce<-merge(sce,sce4)
+
+#remove batch effect
