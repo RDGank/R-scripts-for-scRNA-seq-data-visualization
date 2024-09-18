@@ -86,3 +86,11 @@ cell_type_cols <- c("#0072B5FF" ,"#E18727FF"
                      "#AB82FF","#90EE90","#00CD00","#008B8B",
                     "#CD5C5C","#8B008B","#FF3030", "#7CFC00") 
 
+#UMAP plot
+library(dplyr)
+library(tidydr)
+ DimPlot(sce, reduction = 'umap',label = T,repel = T,label.box = F,label.size = 5, pt.size = 0.1,group.by = 'celltype',cols = cell_type_cols)+
+  labs(x = "UMAP1", y = "UMAP2",title = "Celltype")+theme_dr()+
+   theme(panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank()) 
+
