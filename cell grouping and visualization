@@ -94,3 +94,48 @@ library(tidydr)
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank()) 
 
+#heatmap plot
+DoHeatmapPlot <- function(object, groupBy, features) {
+  require(ComplexHeatmap)
+  plot_data = SeuratObject::FetchData(object = object,
+                                      vars = c(features, groupBy), 
+                                      slot = 'counts') %>% 
+    dplyr::mutate(across(.cols = where(is.numeric), .fns = ~ log2(.x + 1))) %>% 
+    dplyr::rename(group = as.name(groupBy)) %>% 
+    dplyr::arrange(group) %T>% 
+    assign(x = 'clusterInfo', value = .$group, envir = .GlobalEnv) %>% 
+    dplyr::select(-group) %>% 
+    t()
+  top_anno = HeatmapAnnotation(
+    cluster = anno_block(gp = gpar(fill = cell_type_cols), 
+                         labels = as.character(unique(clusterInfo)), 
+                         labels_gp = gpar(cex = 1, 
+                                          col = 'white',
+                                          family = 'Arial'))) 
+  plot_data = as.data.frame(plot_data) 
+  gene_pos = which(rownames(plot_data) %in% features) 
+  plot_data = as.matrix(plot_data)
+  
+  row_anno = rowAnnotation(mark_gene = anno_mark(at = gene_pos, 
+                                                 labels = features,labels_gp = gpar(cex = 0.5, 
+                                                                                    col = 'black',
+                                                                                    family = 'Arial') ))
+  col_fun = colorRamp2(c(-1,1,4), c("#809EBA", "white", "#B96262"))
+  Heatmap(matrix = plot_data,
+          col = col_fun,
+          cluster_rows = FALSE,
+          cluster_columns = FALSE,
+          show_column_names = FALSE,
+          show_row_names = FALSE,
+          show_heatmap_legend = TRUE,
+          column_split = clusterInfo,
+          top_annotation = top_anno,
+          column_title = NULL,
+          right_annotation = row_anno,
+          use_raster = FALSE,
+          heatmap_legend_param = list(
+            title = 'log2(count+1)',
+            title_position = 'leftcenter-rot'))
+}
+#cg<-c("CD19","CD3D") marker genes...
+DoHeatmapPlot(object = sce, groupBy = 'celltype', features = cg)
