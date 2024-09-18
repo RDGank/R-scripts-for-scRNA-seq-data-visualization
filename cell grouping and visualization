@@ -35,9 +35,41 @@ input_sce <- NormalizeData(input_sce,
   input_sce <- RunUMAP(input_sce,  dims = 1:15,  reduction = "harmony")
   input_sce <- RunTSNE(input_sce,  dims = 1:15,  reduction = "harmony",check_duplicates=F)
   input_sce <- FindNeighbors(input_sce, reduction = "harmony",dims = 1:15) 
-  for (res in c(0.01, 0.05, 0.1, 0.2, 0.3, 0.5,0.8,1)) {
+  for (res in c( 0.1,  0.3, 0.5,0.8,1,1.5,2)) {
   input_sce=FindClusters(input_sce, resolution = res, algorithm = 1)
   }
 return(input_sce)
 }
+sce<-use_harmony(sce)
 
+#name the cell population
+library(stringr)
+sce@meta.data$celltype<-sce@meta.data$seurat_clusters
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'16|25','⑧:Malignant cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'31','⑨:Nasopharyngeal cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'15|36|39','④:Plasma cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'14|21|37','⑥:Myeloid cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'10|12|13|17|18|38|20|35|29','①:T cells(CD④+)')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'26|19','②:T cells(CD⑧+)')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'23|27','⑦:Lymphoid stem cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'40','⑩:Fibroblasts')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'11|22|28|30|34','③:B cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'24|32|33','⑥:Myeloid cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'8|9|1|6','②:T cells(CD⑧+)')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'0|5','①:T cells(CD④+)')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'2|3','③:B cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'4|7','⑤:Natural killer cells')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑩','10')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'④','4')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑧','8')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'④','4')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'①','1')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑤','5')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'②','2')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'③','3')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑧','8')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'③','3')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑥','6')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑦','7')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑨','9')
+sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑤','5')
