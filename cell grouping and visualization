@@ -73,3 +73,16 @@ sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑥','6')
 sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑦','7')
 sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑨','9')
 sce@meta.data$celltype<-str_replace(sce@meta.data$celltype,'⑤','5')
+
+#Configure colors
+library(ggsci)
+library(scales)
+library(RColorBrewer)
+color1<-pal_npg()(10)
+cell_type_cols <- c("#0072B5FF" ,"#E18727FF"
+ ,"#20854EFF" ,"#7876B1FF" ,"#BC3C29FF" ,"#6F99ADFF"
+  ,"#FFDC91FF" ,"#EE4C97FF","#FF6A6A","gray","#6495ED","#FFC1C1",
+                    "#FF34B3","#BC8F8F","#20B2AA","#00F5FF","#FFA500","#ADFF2F",
+                     "#AB82FF","#90EE90","#00CD00","#008B8B",
+                    "#CD5C5C","#8B008B","#FF3030", "#7CFC00") 
+
