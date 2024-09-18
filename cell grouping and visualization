@@ -139,3 +139,17 @@ DoHeatmapPlot <- function(object, groupBy, features) {
 }
 #cg<-c("CD19","CD3D") marker genes...
 DoHeatmapPlot(object = sce, groupBy = 'celltype', features = cg)
+
+#percentage plot
+sample_table <- as.data.frame(table(sce@meta.data$samples,sce@meta.data$celltype))
+names(sample_table) <- c("samples","celltype","CellNumber")
+plot_sample<-ggplot(sample_table,aes(x=celltype,weight=CellNumber,fill=samples))+
+  geom_bar(position = 'fill')+
+  scale_fill_manual(values=cell_type_cols) + 
+  theme(panel.grid = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        axis.line.x = element_line(colour = "black") ,
+        axis.line.y = element_line(colour = "black") ,
+        plot.title = element_text(lineheight=.8, face="bold", hjust=0.5, size =16)
+  )+labs(y="Percentage")+RotatedAxis()
+plot_sample
