@@ -5,3 +5,51 @@ library(monocle3)
 library(tidyverse)
 library(patchwork)
 
+#cytotrace2
+cytotrace2_result <- cytotrace2(sce, is_seurat = TRUE, slot_type = "counts", species = 'human')
+# making an annotation dataframe that matches input requirements for plotData function
+annotation <- data.frame(phenotype = sce@meta.data$celltype) %>% set_rownames(., colnames(sce))
+# plotting
+plots <- plotData(cytotrace2_result = cytotrace2_result, annotation = annotation, is_seurat = TRUE)
+plots$CytoTRACE2_UMAP
+plots$CytoTRACE2_Boxplot_byPheno
+
+#monocle2
+Counts<-GetAssayData(object = sce, slot = 'counts',assay="RNA")
+gene_annotation <- data.frame(gene_short_name=rownames(Counts),biotype=rep("protein_coding",nrow(Counts)))
+rownames(gene_annotation)<-rownames(Counts)
+sample_sheet<-as.data.frame(sce@meta.data)
+sample_sheet<-cbind(rownames(sample_sheet),sample_sheet)
+colnames(sample_sheet)[1]<-"cell"
+sample_sheet<-as.data.frame(t(subset(t(sample_sheet),select=colnames(Counts))))
+
+pd <- new("AnnotatedDataFrame", data = sample_sheet)
+fd <- new("AnnotatedDataFrame", data = gene_annotation)
+HSMM <- newCellDataSet(Counts,phenoData = pd, featureData = fd,expressionFamily = negbinomial.size())
+
+HSMM <- estimateSizeFactors(HSMM)
+HSMM <- estimateDispersions(HSMM)
+
+HSMM <- detectGenes(HSMM, min_expr = 1.0)
+expressed_genes <- row.names(subset(fData(HSMM),num_cells_expressed >= 50))
+diff_test_res <- differentialGeneTest(HSMM[expressed_genes,],fullModelFormulaStr = "~celltype")
+
+ordering_genes <- row.names (subset(diff_test_res, qval < 0.001))
+HSMM <- setOrderingFilter(HSMM, ordering_genes)
+
+library("scales")
+cluster_vec <- as.character(seq(from=0,to=10,by=1))
+hex_codes2 <- hue_pal()(length(cluster_vec))
+names(hex_codes2)<-cluster_vec
+hex_codes2<-hex_codes2[1:3]
+plotg<-plot_ordering_genes(HSMM)
+ggsave(filename = "plot_ordering_genes.png",width = 3,height = 4,plot = plotg)
+
+HSMM_myo <- reduceDimension(HSMM, max_components = 2, method = 'DDRTree')
+HSMM_myo <- orderCells(HSMM_myo)
+p1<-plot_cell_trajectory(HSMM_myo, color_by = "celltype")+theme(legend.position="right")+ scale_color_manual(values = hex_codes2, name = "seurat_clusters")
+ggsave(filename = "plot_cell_trajectory.seurat_clusters.png",width = 6,height = 6,plot = p1)
+p<-plot_cell_trajectory(HSMM_myo, color_by = "Pseudotime")+theme(legend.position="right")
+ggsave(filename = "plot_cell_trajectory.Pseudotime.png",width = 5,height = 4,plot = p)
+
+#monocle3
