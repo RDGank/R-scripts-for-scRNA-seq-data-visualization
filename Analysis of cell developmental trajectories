@@ -53,3 +53,27 @@ p<-plot_cell_trajectory(HSMM_myo, color_by = "Pseudotime")+theme(legend.position
 ggsave(filename = "plot_cell_trajectory.Pseudotime.png",width = 5,height = 4,plot = p)
 
 #monocle3
+data <- GetAssayData(sce, assay = 'RNA', slot = 'counts')
+cell_metadata <- sce@meta.data
+gene_annotation <- data.frame(gene_short_name = rownames(data))
+rownames(gene_annotation) <- rownames(data)
+cds <- new_cell_data_set(data,
+                         cell_metadata = cell_metadata,
+                         gene_metadata = gene_annotation)
+cds <- preprocess_cds(cds, num_dim = 50)
+cds <- reduce_dimension(cds, preprocess_method = "PCA")
+cds.embed <- cds@int_colData$reducedDims$UMAP
+int.embed <- Embeddings(sce, reduction = "umap")
+int.embed <- int.embed[rownames(cds.embed),]
+cds@int_colData$reducedDims$UMAP <- int.embed
+cds <- cluster_cells(cds)
+cds <- learn_graph(cds)
+p = plot_cells(cds, label_groups_by_cluster = FALSE, label_leaves = FALSE, 
+               label_branch_points = FALSE)
+p2 + geom_vline(xintercept = seq(4,5,0.25)) + geom_hline(yintercept = seq(-2,0,0.25))
+embed <- data.frame(Embeddings(sce, reduction = "umap"))
+embed <- subset(embed, UMAP_1 > 4 & UMAP_1 < 4.5 & UMAP_2 > -1.5 & UMAP_2 < 0)
+root.cell <- rownames(embed)
+cds <- order_cells(cds, root_cells = root.cell)
+plot_cells(cds, color_cells_by = "pseudotime", label_cell_groups = FALSE, 
+           label_leaves = FALSE,  label_branch_points = FALSE)
