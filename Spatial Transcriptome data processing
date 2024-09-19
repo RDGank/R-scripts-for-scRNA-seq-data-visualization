@@ -1,1 +1,24 @@
+library(STutility)
+library(semla)
+library(tidyverse)
+library(Seurat)
+library(SeuratData)
+library(tidyHeatmap)
 
+df<-data.frame(
+  samples=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/GSM6030901_patient_1_filtered_feature_bc_matrix.h5'),
+            #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/GSM6030902_patient_2_filtered_feature_bc_matrix.h5'),
+  spotfiles=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/tissue_positions_list.csv'),
+              #"./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/tissue_positions_list.csv"
+  imgs=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/tissue_hires_image.png'),
+         #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/tissue_hires_image.png'
+  json=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/scalefactors_json.json'))
+         #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/scalefactors_json.json'
+
+se <- InputFromTable(infotable = df, 
+                     min.gene.count = 100, 
+                     min.gene.spots = 5,
+                     min.spot.count = 500,
+                     platform =  "Visium")
+se <- LoadImages(se, time.resolve = F, verbose = T)
+ImagePlot(se, method = "raster", darken = TRUE, type = "raw")
