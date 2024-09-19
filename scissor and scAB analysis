@@ -1,1 +1,33 @@
+library(Seurat)
+library(Scissor)
 
+#sce: seurat object 
+#exp: expression matrix of bulk data 
+#meta: clinical information
+
+#scissor
+phenotype <-meta[,1:2]
+colnames(phenotype) <- c("time", "status")
+head(phenotype)
+identical(colnames(exp) ,row.names(phenotype))
+row.names(phenotype) = colnames(exp)
+infos1 <- Scissor(bulk_dataset, sce, phenotype, alpha = 0.05, family = "cox")
+Scissor_select <- rep("Background", ncol(sce))
+names(Scissor_select) <- colnames(sce)
+Scissor_select[infos1$Scissor_pos] <- "Scissor+"
+Scissor_select[infos1$Scissor_neg] <- "Scissor-"
+sce <- AddMetaData(sce, metadata = Scissor_select, col.name = "scissor")
+DimPlot(sce, reduction = 'umap', group.by = 'scissor', 
+        cols = c('grey',"#2278B4","#CE6A6C" ), pt.size = 0.1, order = T)
+
+#scAB
+library(scAB)
+scAB_data <- create_scAB(sce,exp,phenotype)
+K <- select_K(scAB_data)
+scAB_result <- scAB(Object=scAB_data, K=K)
+sce <- findSubset(sce,scAB_Object = scAB_result,tred = 2)
+table(sce$scAB_select)
+UMAP_scAB <- DimPlot(sce,group.by="scAB_select",
+                     cols=c("#80b1d3","red"),
+                     pt.size=0.001,
+                     order=c("scAB+ cells","Other cells"))
