@@ -1,1 +1,32 @@
+library(stringr)
+library(survival)
+library(survminer)
+library(My.stepwise)
 
+#g<-c('CDKN2A','WDR77','TNFAIP6','HLA_DQA1','TMC8')
+#g: A selected set of genes
+e=t(exprSet[g,])
+dat=cbind(meta,e)
+vl <- colnames(dat)[c(3:ncol(dat))]
+ My.stepwise.coxph(Time = "time",
+                  Status = "event",
+                   variable.list = vl,
+                   data = dat)
+
+#use the final model of the output
+model = coxph(formula = Surv(time, event) ~ CDKN2A + WDR77 + TNFAIP6 + HLA_DQA1 + TMC8, data = dat)
+
+#forest plot
+ggforest(model,data = dat)
+
+#survival plot
+fp <- predict(model,dat)
+head(fp)
+names(fp) = dat$ID
+ri = ifelse(fp<median(fp),"lowrisk","highrisk")
+ri = factor(ri,levels = c("lowrisk","highrisk"))
+sfit <- survfit(Surv(time, event)~ri, data=dat)
+ggsurvplot(sfit,palette = c("#E7B800", "#2E9FDF"),
+           risk.table =TRUE,pval =TRUE,
+           conf.int =TRUE,xlab ="time(month)", 
+           ggtheme =theme_light())
