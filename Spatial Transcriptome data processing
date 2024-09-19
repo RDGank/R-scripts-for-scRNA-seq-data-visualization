@@ -5,20 +5,27 @@ library(Seurat)
 library(SeuratData)
 library(tidyHeatmap)
 
-df<-data.frame(
-  samples=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/GSM6030901_patient_1_filtered_feature_bc_matrix.h5'),
-            #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/GSM6030902_patient_2_filtered_feature_bc_matrix.h5'),
-  spotfiles=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/tissue_positions_list.csv'),
-              #"./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/tissue_positions_list.csv"
-  imgs=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/tissue_hires_image.png'),
-         #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/tissue_hires_image.png'
-  json=c('./SpaceRanger/GSM6030901_patient_1_filtered_feature_bc_matrix/spatial/scalefactors_json.json'))
-         #'./SpaceRanger/GSM6030901_patient_2_filtered_feature_bc_matrix/spatial/scalefactors_json.json'
+#combine the scRNA and ST data
+gene_list<-c('EPCAM','TUBB2B')
+stRNA <-AddModuleScore(stRNA,features = gene_list,name = "Mal(TUBB2B+) abundance")
 
-se <- InputFromTable(infotable = df, 
-                     min.gene.count = 100, 
-                     min.gene.spots = 5,
-                     min.spot.count = 500,
-                     platform =  "Visium")
-se <- LoadImages(se, time.resolve = F, verbose = T)
-ImagePlot(se, method = "raster", darken = TRUE, type = "raw")
+metadata <-stRNA@meta.data
+colnames( metadata)
+ggviolin(data = metadata,  x="SCT_snn_res.0.8", y="Mal(TUBB2B+) abundance",fill = "SCT_snn_res.0.8")
+
+#person correlation analysis 
+cor.test(metadata$Treg_TNFRSF4_abundance1,metadata$ICOS_1,method = 'pearson',use="complete.obs")
+Mal_TUBB2B_abundance <- metadata$Treg_TNFRSF4_abundance1
+ICOSLG_abundance<- metadata$ICOS_1
+plot(Mal_TUBB2B_abundance, ICOSLG_abundance, main = "r=0.17,p-value p-value = 1.465e-10",
+     xlab = "Treg_TNFRSF4_abundance", ylab = "ICOS_abundance",
+     pch = 18,frame = F)
+# add a regression line
+abline(lm(y ~ x, data = metadata), col = "red")
+pdf(file = 'cor-Treg-FOXP3-CTLA4.pdf',height = 3.5,width = 4)
+ggplot(metadata, aes(x=metadata$Treg_FOXP3_abundance1, y=metadata$CTLA4_1)) + 
+  geom_point(color="#A1CB4E",size=1)+ geom_smooth(method = 'lm', se = F, color = "#4DBBD5FF")+theme_bw()+
+  stat_cor(data=metadata, method = "pearson")+
+  theme_bw()+
+  labs(x='Treg(FOXP3+) abundance',y='CTLA4')
+  dev.off()
